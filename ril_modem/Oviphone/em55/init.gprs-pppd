@@ -1,0 +1,29 @@
+#!/system/bin/sh
+# An unforunate wrapper script 
+# so that the exit code of pppd may be retrieved
+
+
+# this is a workaround for issue #651747
+#trap "/system/bin/sleep 1;exit 0" TERM
+
+
+PPPD_PID=
+
+/system/bin/setprop "net.gprs.ppp-exit" ""
+
+/system/bin/log -t pppd "Starting pppd"
+
+#/system/xbin/pppd $*
+#/system/xbin/pppd  /dev/ttyUSB0 115200 mru 1280 mtu 1280 nodetach debug dump defaultroute replacedefaultroute usepeerdns novj novjccomp noipdefault ipcp-accept-local ipcp-accept-remote connect-delay 5000
+
+#/system/bin/pppd /dev/imapx200_serial0 115200 mru 1280 mtu 1280 nodetach debug dump defaultroute usepeerdns novj novjccomp noipdefault ipcp-accept-local ipcp-accept-remote user "card" password "card" connect '/system/bin/chat -s -v -f /system/etc/ppp/wcdma-ppp-on-dialer'
+/system/bin/pppd /dev/mux0 115200 mru 320 mtu 320 nodetach debug dump defaultroute usepeerdns novj novjccomp noipdefault ipcp-accept-local ipcp-accept-remote connect '/system/bin/chat -s -v -f /system/etc/ppp/wcdma-ppp-on-dialer'
+#/system/xbin/pppd name ctnet@mycdma.cn noaccomp nobsdcomp noccp nodeflate nocrtscts connect /etc/ppp/evdo-ppp-on-dialer /dev/ttyUSB0 115200 nodetach debug dump defaultroute replacedefaultroute usepeerdns novj novjccomp noipdefault ipcp-accept-local ipcp-accept-remote connect-delay 1000
+
+PPPD_EXIT=$?
+PPPD_PID=$!
+
+/system/bin/log -t pppd "pppd exited with $PPPD_EXIT"
+
+/system/bin/setprop "net.gprs.ppp-exit" "$PPPD_EXIT"
+

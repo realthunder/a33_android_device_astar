@@ -1,0 +1,32 @@
+From fadda8a16cf5eee7fa2a3e8942ed42cec0952806 Mon Sep 17 00:00:00 2001
+From: zengshuchuan <zengshuchuan@allwinnertech.com>
+Date: Thu, 7 Aug 2014 20:18:13 +0800
+Subject: [PATCH][tools/sun8i-dev] add partition for oem
+
+---
+ pack/chips/sun8iw5p1/configs/y3/sys_partition.fex |    9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/pack/chips/sun8iw5p1/configs/y3/sys_partition.fex b/pack/chips/sun8iw5p1/configs/y3/sys_partition.fex
+index 7d3cbda..a69b552 100755
+--- a/pack/chips/sun8iw5p1/configs/y3/sys_partition.fex
++++ b/pack/chips/sun8iw5p1/configs/y3/sys_partition.fex
+@@ -98,7 +98,14 @@ size = 16384
+     ro           = 0
+     user_type    = 0x8000
+ 
+-;------------------------------>nandk, UDISK
++;------------------------------>nandj,media_data
++[partition]
++    name         = media_data
++    size         = 2097152
++    user_type    = 0x8000
++
++
++;------------------------------>nandl, UDISK
+ [partition]
+     name         = UDISK
+     downloadfile = "diskfs.fex"
+-- 
+1.7.9.5
+

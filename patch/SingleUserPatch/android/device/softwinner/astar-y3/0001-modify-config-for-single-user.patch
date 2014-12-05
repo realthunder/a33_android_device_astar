@@ -1,0 +1,201 @@
+From 7e0977a5e729029213299ffb8c3aa6ed5cb1dd8f Mon Sep 17 00:00:00 2001
+From: zengshuchuan <zengshuchuan@allwinnertech.com>
+Date: Wed, 6 Aug 2014 15:41:53 +0800
+Subject: [PATCH][astar-y3/kitkat-a33] modify config for single user
+
+---
+ astar_y3.mk                                        |    5 +--
+ fstab.sun8i                                        |    4 +-
+ init.sun8i.rc                                      |   47 ++++----------------
+ .../frameworks/base/core/res/res/values/config.xml |    2 +-
+ .../base/core/res/res/xml/storage_list.xml         |   10 ++---
+ recovery.fstab                                     |    6 ++-
+ recovery/default_device.cpp                        |    2 +-
+ 7 files changed, 25 insertions(+), 51 deletions(-)
+
+diff --git a/astar_y3.mk b/astar_y3.mk
+index 5c5df77..5f70cfd 100755
+--- a/astar_y3.mk
++++ b/astar_y3.mk
+@@ -122,9 +122,8 @@ PRODUCT_COPY_FILES += \
+     device/softwinner/astar-y3/tools/logger.sh:system/bin/logger.sh
+ 
+ PRODUCT_PROPERTY_OVERRIDES += \
+-    ro.sys.storage_type = emulated \
+-	persist.sys.usb.config=mtp \
+-	ro.udisk.lable=Polaris \
++	persist.sys.usb.config=mass_storage \
++	ro.udisk.lable=astar \
+ 	ro.font.scale=1.0 \
+ 	ro.hwa.force=false \
+ 	rw.logger=0 \
+diff --git a/fstab.sun8i b/fstab.sun8i
+index 60dd5a9..a8eb78a 100755
+--- a/fstab.sun8i
++++ b/fstab.sun8i
+@@ -7,7 +7,9 @@
+ 
+ /dev/block/by-name/system	/system             ext4      ro                                            	wait
+ /dev/block/by-name/cache	/cache              ext4      noatime,nosuid,nodev,nomblk_io_submit,barrier=1	wait,check
+-/dev/block/by-name/UDISK	/data		    ext4      noatime,nosuid,nodev,nomblk_io_submit,barrier=1,noauto_da_alloc wait,check,encryptable=/dev/block/by-name/metadata
++/dev/block/by-name/data		/data		    ext4      noatime,nosuid,nodev,nomblk_io_submit,barrier=1,noauto_da_alloc wait,check,encryptable=/dev/block/by-name/metadata
++/devices/virtual/block/nandk    /mnt/sdcard         vfat      rw,relatime,fmask=0000,dmask=0000                 wait,check,noemulatedsd,voldmanaged=sdcard:auto
++/devices/platform/sunxi-mmc.2/mmc_host  /mnt/sdcard         vfat    rw,relatime,fmask=0000,dmask=0000                                       wait,check,voldmanaged=sdcard:auto
+ /devices/platform/sunxi-mmc.0/mmc_host  /mnt/extsd          vfat    rw,relatime,fmask=0000,dmask=0000                                       wait,check,voldmanaged=extsd:auto
+ /devices/platform/sunxi-mmc.1/mmc_host  /mnt/extsd          vfat    rw,relatime,fmask=0000,dmask=0000                                       wait,check,voldmanaged=extsd:auto
+ /devices/platform/sunxi-ehci.1             /mnt/usbhost1       vfat    rw,relatime,fmask=0000,dmask=0000                                       wait,check,voldmanaged=usbhost1:auto
+diff --git a/init.sun8i.rc b/init.sun8i.rc
+index e935f25..a1b28b1 100755
+--- a/init.sun8i.rc
++++ b/init.sun8i.rc
+@@ -2,30 +2,12 @@ import init.sun8i.usb.rc
+ 
+ on init
+ #See storage config details at http://source.android.com/tech/storage/
+-	mkdir /mnt/shell/emulated 0700 shell shell
+-	mkdir /storage/emulated 0555 root root
+-
+-	export EXTERNAL_STORAGE /storage/emulated/legacy
+-	export EMULATED_STORAGE_SOURCE /mnt/shell/emulated
+-	export EMULATED_STORAGE_TARGET /storage/emulated
+-#	export MEDIA_STORAGE /mnt/media/sdcard
+-
+-#	Support legacy paths
+-	symlink /storage/emulated/legacy /sdcard
+-	symlink /storage/emulated/legacy /mnt/sdcard
+-	symlink /storage/emulated/legacy /storage/sdcard0
+-	symlink /mnt/shell/emulated/0 /storage/emulated/legacy
+-
+-#	export EXTERNAL_STORAGE /mnt/sdcard
+-#	mkdir /mnt/sdcard 0000 system system
+-#	symlink /mnt/sdcard /sdcard
+-	
+-	#mkdir /mnt/extsd 0000 system system
+-	#mkdir /mnt/usbhost1 0000 system system
+-    mkdir /mnt/extsd 0700 media_rw media_rw
+-    mkdir /storage/extsd 0700 root root
+-    mkdir /mnt/usbhost1 0700 media_rw media_rw
+-    mkdir /storage/usbhost1 0700 root root
++	export EXTERNAL_STORAGE /mnt/sdcard
++	mkdir /mnt/sdcard 0000 system system
++	symlink /mnt/sdcard /sdcard
++	
++	mkdir /mnt/extsd 0000 system system
++	mkdir /mnt/usbhost1 0000 system system
+ 	mount debugfs debugfs /sys/kernel/debug
+ 	mkdir /databk 0700 root  system
+ 
+@@ -39,11 +21,11 @@ on early-fs
+ #	insmod /system/vendor/modules/bcmdhd.ko
+ 	
+ on post-fs-data
+-	mkdir /data/media 0770 media_rw media_rw
++	#mkdir /data/media 0770 media_rw media_rw
+ 	#mkdir /mnt/media/sdcard 0770 media_rw media_rw
+ 
+ on fs
+-#	format_userdata /dev/block/by-name/UDISK polaris
++	format_userdata /dev/block/by-name/UDISK astar
+ # radio related, such as imei.conf
+ 	mkdir /data/misc/radio 0777 system radio
+ 
+@@ -122,19 +104,6 @@ on property:rw.logger=1
+ 	start logger_android
+ 	start logger_radio
+ 
+-# virtual sdcard daemon running as media_rw (1023)
+-#service sdcard /system/bin/sdcard /data/media /mnt/shell/emulated 1023 1023
+-service sdcard /system/bin/sdcard -u 1023 -g 1023 -l /data/media /mnt/shell/emulated
+-    class late_start
+-
+-service fuse_extsd /system/bin/sdcard -u 1023 -g 1023 -w 1023 -d /mnt/extsd /storage/extsd
+-    class late_start
+-    disabled
+-
+-service fuse_usbhost1 /system/bin/sdcard -u 1023 -g 1023 -w 1023 -d /mnt/usbhost1 /storage/usbhost1
+-    class late_start
+-    disabled
+-    
+ # ril related services
+ service ril-daemon /system/bin/rild -l libsoftwinner-ril.so -- -d /dev/ttyUSB2
+ 	class main
+diff --git a/overlay/frameworks/base/core/res/res/values/config.xml b/overlay/frameworks/base/core/res/res/values/config.xml
+index 4b80e22..8a4bd60 100755
+--- a/overlay/frameworks/base/core/res/res/values/config.xml
++++ b/overlay/frameworks/base/core/res/res/values/config.xml
+@@ -142,7 +142,7 @@
+     <bool name="config_enableWifiDisplay">true</bool>
+     
+    <!--  Maximum number of supported users -->
+-    <integer name="config_multiuserMaximumUsers">8</integer>
++    <integer name="config_multiuserMaximumUsers">1</integer>
+     <bool name="config_ui_enableFadingMarquee">false</bool>
+     <integer name="config_screenBrightnessSettingMinimum">10</integer>
+    <!-- Safe headphone volume index. When music stream volume is below this index
+diff --git a/overlay/frameworks/base/core/res/res/xml/storage_list.xml b/overlay/frameworks/base/core/res/res/xml/storage_list.xml
+index 0370a35..a9cd7d8 100755
+--- a/overlay/frameworks/base/core/res/res/xml/storage_list.xml
++++ b/overlay/frameworks/base/core/res/res/xml/storage_list.xml
+@@ -33,15 +33,15 @@
+ -->
+ 
+ <StorageList xmlns:android="http://schemas.android.com/apk/res/android">
+-    <storage android:mountPoint="/storage/sdcard"
++    <storage android:mountPoint="/mnt/sdcard"
+              android:storageDescription="@string/storage_internal"
+              android:primary="true"
+              android:removable="false"
+-             android:emulated="true"
++             android:emulated="false"
+              android:mtpReserve="100" 
+-             android:allowMassStorage="false"
++             android:allowMassStorage="true"
+              android:maxFileSize="0"/>
+-	<storage android:mountPoint="/storage/extsd"
++	<storage android:mountPoint="/mnt/extsd"
+              android:storageDescription="@string/storage_sd_card"
+              android:primary="false"
+              android:removable="true"
+@@ -49,7 +49,7 @@
+              android:mtpReserve="0" 
+              android:allowMassStorage="true"
+              android:maxFileSize="0"/>
+-	<storage android:mountPoint="/storage/usbhost1"
++	<storage android:mountPoint="/mnt/usbhost1"
+              android:storageDescription="@string/storage_usb"
+              android:primary="false"
+              android:removable="true"
+diff --git a/recovery.fstab b/recovery.fstab
+index fb92e19..2e08563 100755
+--- a/recovery.fstab
++++ b/recovery.fstab
+@@ -7,8 +7,12 @@
+ /dev/block/by-name/env                /env            emmc    defaults                                                        defaults
+ /dev/block/by-name/boot               /boot           emmc    defaults                                                        defaults
+ /dev/block/by-name/system             /system         ext4    defaults                                                        defaults
+-/dev/block/by-name/UDISK              /data           ext4    defaults                                                        defaults
++/dev/block/by-name/data               /data           ext4    defaults                                                        defaults
+ /dev/block/by-name/misc               /misc           emmc    defaults                                                        defaults
+ /dev/block/by-name/recovery           /recovery       emmc    defaults                                                        defaults
+ /dev/block/by-name/cache              /cache          ext4    defaults                                                        defaults
++/dev/block/by-name/UDISK              /sdcard         vfat    defaults                                                        defaults
++/dev/block/mmcblk1p1                  /extsd          vfat    defaults                                                        defaults
++/dev/block/mmcblk1                    /extsd          vfat    defaults                                                        defaults
++/dev/block/mmcblk0p1                  /extsd          vfat    defaults                                                        defaults
+ /dev/block/mmcblk0                    /extsd          vfat    defaults                                                        defaults
+diff --git a/recovery/default_device.cpp b/recovery/default_device.cpp
+index 9316ece..9880247 100755
+--- a/recovery/default_device.cpp
++++ b/recovery/default_device.cpp
+@@ -39,7 +39,7 @@ static const char* ITEMS[] =  {"reboot system now",
+                                "apply update from cache",
+                                NULL };
+ 
+-static const char* INTSTORAGE = "/data/media/0";
++static const char* INTSTORAGE = "/sdcard";
+ static const char* EXTSTORAGE = "/extsd";
+ 
+ class DefaultUI : public ScreenRecoveryUI {
+-- 
+1.7.9.5
+

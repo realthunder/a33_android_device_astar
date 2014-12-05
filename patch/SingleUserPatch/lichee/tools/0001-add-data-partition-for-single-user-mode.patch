@@ -1,0 +1,41 @@
+From aeeaee0b0b150116fa169a04744d1b15cc056ccf Mon Sep 17 00:00:00 2001
+From: zengshuchuan <zengshuchuan@allwinnertech.com>
+Date: Wed, 6 Aug 2014 15:32:17 +0800
+Subject: [PATCH][tools/sun8i-dev] add data partition for single user mode
+
+---
+ pack/chips/sun8iw5p1/configs/y3/sys_partition.fex |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/pack/chips/sun8iw5p1/configs/y3/sys_partition.fex b/pack/chips/sun8iw5p1/configs/y3/sys_partition.fex
+index 7d3cbda..cf81b80 100755
+--- a/pack/chips/sun8iw5p1/configs/y3/sys_partition.fex
++++ b/pack/chips/sun8iw5p1/configs/y3/sys_partition.fex
+@@ -62,11 +62,11 @@ size = 16384
+     user_type    = 0x8000
+ 
+ ;------------------------------>mmcblk0p8/nande
+-;[partition]
+-;    name         = data
+-;    size         = 2097152
+-;    user_type    = 0x8000
+-;
++[partition]
++    name         = data
++    size         = 2097152
++    user_type    = 0x8000
++
+ ;------------------------------>mmcblk0p9/nandf
+ [partition]
+     name         = misc
+@@ -102,6 +102,6 @@ size = 16384
+ [partition]
+     name         = UDISK
+     downloadfile = "diskfs.fex"
+-    ;verify       = 0
++    verify       = 0
+     user_type    = 0x8100
+ 
+-- 
+1.7.9.5
+

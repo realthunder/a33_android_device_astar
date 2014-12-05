@@ -1,0 +1,15 @@
+# yuga cwm600 3G modem
+#	chmod 0751 /system/etc/ppp/call-pppd
+#	chmod 0751 /system/etc/ppp/ip-up
+#	chmod 0751 /system/etc/ppp/ip-down
+#	chown radio system /system/etc/ppp/call-pppd
+#	chown radio system /system/etc/ppp/ip-up
+#	chown radio system /system/etc/ppp/ip-down
+
+service ril-daemon /system/bin/rild -l libsoftwinner-ril-yuga-cw600.so -- -d /dev/ttyUSB2
+    class main
+    socket rild stream 660 root radio
+    socket rild-debug stream 660 radio system
+    user root
+    group radio cache inet misc audio sdcard_rw log
+

@@ -1,0 +1,126 @@
+From d1b02c72cdc546a91f1370e4e4795126eb1a2cac Mon Sep 17 00:00:00 2001
+From: zengshuchuan <zengshuchuan@allwinnertech.com>
+Date: Thu, 7 Aug 2014 20:27:52 +0800
+Subject: [PATCH][astar-y3/kitkat-a33] modify for oem(muti-users)
+
+---
+ astar_y3.mk                                        |    1 -
+ fstab.sun8i                                        |    2 ++
+ init.sun8i.rc                                      |   18 ++++--------------
+ .../base/core/res/res/xml/storage_list.xml         |   14 +++++++++++---
+ 4 files changed, 17 insertions(+), 18 deletions(-)
+
+diff --git a/astar_y3.mk b/astar_y3.mk
+index 5c5df77..48d73d5 100755
+--- a/astar_y3.mk
++++ b/astar_y3.mk
+@@ -122,7 +122,6 @@ PRODUCT_COPY_FILES += \
+     device/softwinner/astar-y3/tools/logger.sh:system/bin/logger.sh
+ 
+ PRODUCT_PROPERTY_OVERRIDES += \
+-    ro.sys.storage_type = emulated \
+ 	persist.sys.usb.config=mtp \
+ 	ro.udisk.lable=Polaris \
+ 	ro.font.scale=1.0 \
+diff --git a/fstab.sun8i b/fstab.sun8i
+index 60dd5a9..6964369 100755
+--- a/fstab.sun8i
++++ b/fstab.sun8i
+@@ -8,6 +8,8 @@
+ /dev/block/by-name/system	/system             ext4      ro                                            	wait
+ /dev/block/by-name/cache	/cache              ext4      noatime,nosuid,nodev,nomblk_io_submit,barrier=1	wait,check
+ /dev/block/by-name/UDISK	/data		    ext4      noatime,nosuid,nodev,nomblk_io_submit,barrier=1,noauto_da_alloc wait,check,encryptable=/dev/block/by-name/metadata
++/devices/virtual/block/nandj            auto                vfat    rw,relatime,fmask=0000,dmask=0000                                       wait,check,voldmanaged=extsd1:auto
++/devices/platform/sunxi-mmc.2/mmc_host  auto                vfat    rw,relatime,fmask=0000,dmask=0000                                       wait,check,voldmanaged=extsd1:auto
+ /devices/platform/sunxi-mmc.0/mmc_host  /mnt/extsd          vfat    rw,relatime,fmask=0000,dmask=0000                                       wait,check,voldmanaged=extsd:auto
+ /devices/platform/sunxi-mmc.1/mmc_host  /mnt/extsd          vfat    rw,relatime,fmask=0000,dmask=0000                                       wait,check,voldmanaged=extsd:auto
+ /devices/platform/sunxi-ehci.1             /mnt/usbhost1       vfat    rw,relatime,fmask=0000,dmask=0000                                       wait,check,voldmanaged=usbhost1:auto
+diff --git a/init.sun8i.rc b/init.sun8i.rc
+index e935f25..911f858 100755
+--- a/init.sun8i.rc
++++ b/init.sun8i.rc
+@@ -20,12 +20,9 @@ on init
+ #	mkdir /mnt/sdcard 0000 system system
+ #	symlink /mnt/sdcard /sdcard
+ 	
+-	#mkdir /mnt/extsd 0000 system system
+-	#mkdir /mnt/usbhost1 0000 system system
+-    mkdir /mnt/extsd 0700 media_rw media_rw
+-    mkdir /storage/extsd 0700 root root
+-    mkdir /mnt/usbhost1 0700 media_rw media_rw
+-    mkdir /storage/usbhost1 0700 root root
++	mkdir /mnt/extsd 0700 shell shell
++	mkdir /mnt/usbhost1 0700 shell shell
++	mkdir /mnt/extsd1 0700 shell shell
+ 	mount debugfs debugfs /sys/kernel/debug
+ 	mkdir /databk 0700 root  system
+ 
+@@ -44,6 +41,7 @@ on post-fs-data
+ 
+ on fs
+ #	format_userdata /dev/block/by-name/UDISK polaris
++	format_userdata /dev/block/by-name/media_data astars
+ # radio related, such as imei.conf
+ 	mkdir /data/misc/radio 0777 system radio
+ 
+@@ -127,14 +125,6 @@ on property:rw.logger=1
+ service sdcard /system/bin/sdcard -u 1023 -g 1023 -l /data/media /mnt/shell/emulated
+     class late_start
+ 
+-service fuse_extsd /system/bin/sdcard -u 1023 -g 1023 -w 1023 -d /mnt/extsd /storage/extsd
+-    class late_start
+-    disabled
+-
+-service fuse_usbhost1 /system/bin/sdcard -u 1023 -g 1023 -w 1023 -d /mnt/usbhost1 /storage/usbhost1
+-    class late_start
+-    disabled
+-    
+ # ril related services
+ service ril-daemon /system/bin/rild -l libsoftwinner-ril.so -- -d /dev/ttyUSB2
+ 	class main
+diff --git a/overlay/frameworks/base/core/res/res/xml/storage_list.xml b/overlay/frameworks/base/core/res/res/xml/storage_list.xml
+index 0370a35..6404c18 100755
+--- a/overlay/frameworks/base/core/res/res/xml/storage_list.xml
++++ b/overlay/frameworks/base/core/res/res/xml/storage_list.xml
+@@ -33,7 +33,7 @@
+ -->
+ 
+ <StorageList xmlns:android="http://schemas.android.com/apk/res/android">
+-    <storage android:mountPoint="/storage/sdcard"
++    <storage android:mountPoint="/mnt/sdcard"
+              android:storageDescription="@string/storage_internal"
+              android:primary="true"
+              android:removable="false"
+@@ -41,7 +41,7 @@
+              android:mtpReserve="100" 
+              android:allowMassStorage="false"
+              android:maxFileSize="0"/>
+-	<storage android:mountPoint="/storage/extsd"
++	<storage android:mountPoint="/mnt/extsd"
+              android:storageDescription="@string/storage_sd_card"
+              android:primary="false"
+              android:removable="true"
+@@ -49,11 +49,19 @@
+              android:mtpReserve="0" 
+              android:allowMassStorage="true"
+              android:maxFileSize="0"/>
+-	<storage android:mountPoint="/storage/usbhost1"
++	<storage android:mountPoint="/mnt/usbhost1"
+              android:storageDescription="@string/storage_usb"
+              android:primary="false"
+              android:removable="true"
+              android:emulated="false"  
+              android:mtpReserve="0" 
+              android:maxFileSize="0"/>
++	<storage android:mountPoint="/mnt/extsd1"
++             android:storageDescription="@string/storage_sd_card"
++             android:primary="false"
++             android:removable="true"
++             android:emulated="false"
++             android:mtpReserve="0"
++             android:allowMassStorage="true"
++             android:maxFileSize="0"/>
+ </StorageList>
+-- 
+1.7.9.5
+

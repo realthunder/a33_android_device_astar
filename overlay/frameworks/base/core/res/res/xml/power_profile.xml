@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<device name="Android">
+  <!-- All values are in mA except as noted -->
+  <item name="none">0</item>
+  <item name="screen.on">256</item>
+  <item name="screen.full">318</item>
+  <item name="wifi.on">2.9</item>
+  <item name="wifi.active">31.0</item>
+  <item name="wifi.scan">100</item>
+  <item name="dsp.audio">14.1</item>
+  <item name="dsp.video">54.0</item>
+
+  
+  <array name="cpu.speeds">
+      <value>60000</value>  <!-- 60 MHz -->
+      <value>120000</value>  <!-- 120 MHz -->
+      <value>240000</value>  <!-- 240 MHz -->
+      <value>300000</value>  <!-- 300 MHz -->
+      <value>360000</value>  <!-- 360 MHz -->
+      <value>420000</value>  <!-- 420 MHz -->
+      <value>600000</value>  <!-- 600 MHz -->
+      <value>900000</value> <!--  900 MHz -->
+  </array>
+  <!-- Power consumption when CPU is idle -->
+  <item name="cpu.idle">3.8</item>
+  <item name="cpu.awake">54.6</item>
+  <!-- Power consumption at different speeds -->
+  <array name="cpu.active">
+      <value>100</value> <!-- 60 MHz -->
+      <value>107</value> <!-- 120 MHz -->
+      <value>116</value> <!-- 240 MHz -->
+      <value>123</value> <!-- 300 MHz -->
+      <value>135</value> <!-- 360 MHz -->
+      <value>138</value> <!-- 420 MHz -->
+      <value>142</value> <!-- 600 MHz -->
+      <value>148</value> <!-- 900 MHz -->
+  </array>
+  <!-- This is the battery capacity in mAh -->
+  <item name="battery.capacity">3775</item>
+      <!--
+      Battery capacity is 7196 mAH (at 7.4 Volts)
+      -->
+</device>

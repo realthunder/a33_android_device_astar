@@ -1,0 +1,10 @@
+#/etc/ppp/gprs-connect-chat
+# chat script for Taiwan GSM Mobile, used Quanta q101 3.5G data card
+TIMEOUT         15
+ABORT           "DELAYED"
+ABORT           "BUSY"
+ABORT           "ERROR"
+ABORT           "NO DIALTONE"
+ABORT           "NO CARRIER"
+''              ' ATDT*99#'
+'CONNECT'         ''

@@ -1,0 +1,57 @@
+From 19d007f470c0c0cd2993e988f6707a674bee9094 Mon Sep 17 00:00:00 2001
+From: zengshuchuan <zengshuchuan@allwinnertech.com>
+Date: Thu, 7 Aug 2014 20:22:26 +0800
+Subject: [PATCH][vold/kitkat-a33] modify for oem (muti-users)
+
+---
+ DirectVolume.cpp |   18 +++++++++++++++++-
+ 1 file changed, 17 insertions(+), 1 deletion(-)
+
+diff --git a/DirectVolume.cpp b/DirectVolume.cpp
+index 236b734..4ee6449 100755
+--- a/DirectVolume.cpp
++++ b/DirectVolume.cpp
+@@ -32,6 +32,7 @@
+ #include "DirectVolume.h"
+ #include "VolumeManager.h"
+ #include "ResponseCode.h"
++#include "Fat.h"
+ #include "cryptfs.h"
+ 
+ // #define PARTITION_DEBUG
+@@ -242,6 +243,8 @@ int DirectVolume::handleBlockEvent(NetlinkEvent *evt) {
+                 if (major == 179) {
+                     if (!strncmp(getLabel(), "sdcard", strlen("sdcard")) && !strncmp(dp, "/devices/platform/sunxi-mmc.", strlen("/devices/platform/sunxi-mmc."))) {
+                         mPartsChangeFlag = 1;
++                    } else if (!strncmp(dp, "/devices/platform/sunxi-mmc.2", strlen("/devices/platform/sunxi-mmc.2"))) {
++                        mPartsChangeFlag = 2;
+                     }
+                 }
+                 snprintf(nodepath,
+@@ -523,9 +526,22 @@ int DirectVolume::getDeviceNodes(dev_t *devs, int max) {
+             devs[i] = MKDEV(mDiskMajor, mPartMinors[i]);
+         }
+         return mDiskNumParts;
+-    } else {
++    } else if (mPartsChangeFlag == 1) {
+         devs[0] = MKDEV(mDiskMajor, mPartMinors[0]);
+         return 1;
++    } else if (mPartsChangeFlag == 2) {
++        char devicePath[255];
++        int i;
++        for (i = mDiskNumParts - 1; i >= 0; i--) {
++            memset(devicePath, 0, 255);
++            sprintf(devicePath, "/dev/block/vold/%d:%d", mDiskMajor,
++                    mPartMinors[i]);
++            if (!Fat::check(devicePath)) {
++                devs[0] = MKDEV(mDiskMajor, mPartMinors[i]);
++                return 1;
++            }
++        }
++        return 0;
+     }
+     }
+     devs[0] = MKDEV(mDiskMajor, mPartMinors[mPartIdx -1]);
+-- 
+1.7.9.5
+
